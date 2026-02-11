@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Resume Screening Results</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+
+    <style>
+        .score-cell {
+            text-align: center;
+            font-weight: 600;
+            font-size: 15px;
+            color: #e5e7eb;
+        }
+
+        .skills-box {
+            text-align: left;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .skills-box .matched {
+            color: #a7f3d0; /* soft green */
+        }
+
+        .skills-box .missing {
+            color: #fecaca; /* soft red */
+            margin-top: 4px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="results-wrapper">
+
+    <!-- Page Heading -->
+    <h1 class="page-title">AI Resume Screening Results</h1>
+    <p class="page-subtitle">
+        Explainable Resume Ranking using Skill Match Intelligence
+    </p>
+
+    <!-- Results Table -->
+    <div class="table-container">
+        <table class="results-table">
+
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Resume Name</th>
+                    <th>
+                        AI Confidence Score
+                        <span title="Calculated based on explicit skill overlap between Job Description and Resume using NLP techniques">
+                            ⓘ
+                        </span>
+                    </th>
+                    <th>Skill Analysis</th>
+                    <th>Experience</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for row in results %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+
+                    <td class="resume-name">
+                        {{ row.name }}
+                    </td>
+
+                    <!-- Match percentage -->
+                    <td class="score-cell">
+                        {% set percent = (row.score * 100) | round(0) %}
+                        {{ percent }}%
+                    </td>
+
+                    <!-- Matched vs Missing skills -->
+                    <td class="skills-box">
+                        <div class="matched">
+                            <strong>✅ Matched:</strong>
+                            {{ row.matched_skills | join(', ') if row.matched_skills else "None" }}
+                        </div>
+
+                        <div class="missing">
+                            <strong>❌ Missing:</strong>
+                            {{ row.missing_skills | join(', ') if row.missing_skills else "None (Good fit)" }}
+                        </div>
+
+
+                    </td>
+
+                    <td class="experience">
+                        {{ row.exp }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+
+        </table>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="button-group">
+        <a href="/download_csv" class="btn primary">⬇ Download CSV</a>
+        <a href="/" class="btn secondary">← Go Back</a>
+    </div>
+    <p style="text-align:center; font-size:13px; color:#d1d5db; margin-top:20px;">
+        This AI Confidence Score is generated using explainable skill-matching logic, not black-box prediction.
+    </p>
+
+
+</div>
+
+</body>
+</html>
