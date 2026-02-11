@@ -1,10 +1,10 @@
-# 🤖 AI-Based Resume Screening System
+# AI-Based Resume Screening System
 
 An intelligent web application that ranks resumes based on Job Description (JD) skill matching using explainable AI logic.
 
 ---
 
-## 📌 Project Overview
+## Project Overview
 
 The AI-Based Resume Screening System helps recruiters evaluate resumes automatically by:
 
@@ -18,20 +18,20 @@ This system eliminates manual screening effort and improves hiring efficiency.
 
 ---
 
-## 🚀 Features
+## Features
 
-- 📄 Upload multiple resumes
-- 🧠 Skill extraction using NLP-based matching
-- 📊 AI Confidence Score (Skill-based ranking)
-- ✅ Matched skills detection
-- ❌ Missing skills detection
-- 📥 Download results as CSV
-- 🔐 Basic authentication (Login system)
-- 💡 Explainable resume ranking (No black-box scoring)
+- Upload multiple resumes
+- Skill extraction using NLP-based matching
+- AI Confidence Score (Skill-based ranking)
+- Matched skills detection
+- Missing skills detection
+- Download results as CSV
+- Basic authentication (Login system)
+- Explainable resume ranking (No black-box scoring)
 
 ---
 
-## 🏗 Tech Stack
+## Tech Stack
 
 ### Backend
 - Python
@@ -52,7 +52,7 @@ This system eliminates manual screening effort and improves hiring efficiency.
 
 ---
 
-## 🧠 System Architecture
+## System Architecture
 
 ```
 
@@ -74,7 +74,7 @@ Results Display + CSV Download
 
 ---
 
-## 📊 AI Confidence Score Logic
+## AI Confidence Score Logic
 
 ```
 
@@ -89,7 +89,7 @@ Score = (Number of matched JD skills ÷ Total JD skills) × 100
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 
@@ -116,7 +116,7 @@ resume_screening/
 
 ---
 
-## ⚙️ Installation & Setup
+## Installation & Setup
 
 ### 1️⃣ Clone Repository
 
@@ -152,16 +152,7 @@ http://127.0.0.1:5000
 
 ---
 
-## 🔐 Default Login
-
-```
-Username: admin
-Password: admin123
-```
-
----
-
-## 📌 Future Improvements
+## Future Improvements
 
 * Replace rule-based matching with Sentence-BERT embeddings
 * Add database integration (PostgreSQL / MongoDB)
@@ -172,7 +163,7 @@ Password: admin123
 
 ---
 
-## 🎯 Use Cases
+## Use Cases
 
 * HR Resume Screening
 * Campus Placement Automation
