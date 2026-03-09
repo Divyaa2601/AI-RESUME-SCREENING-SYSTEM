@@ -5,6 +5,7 @@
     <title>AI Resume Screening</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
+
 <body>
 
 <!-- Top Bar -->
@@ -17,35 +18,62 @@
 
 <!-- Main Card -->
 <div class="card">
+
     <h1>🤖 AI Resume Screening System</h1>
     <p class="subtitle">Skill Match Intelligence powered by NLP</p>
 
     <form method="POST" enctype="multipart/form-data">
 
+        <!-- Job Description -->
         <div class="form-group">
             <label>Job Description</label>
-            <textarea 
-                name="jd_text" 
-                rows="8" 
+
+            <textarea
+                name="jd_text"
+                rows="8"
                 placeholder="Paste the Job Description here..."
                 required></textarea>
         </div>
 
+        <!-- Resume Upload -->
         <div class="form-group">
-            <label>Upload Resumes (PDF/DOCX)</label>
-            <input 
-                type="file" 
-                name="resumes" 
-                multiple 
+
+            <label>Upload Resumes (PDF / DOCX)</label>
+
+            <input
+                id="resumeInput"
+                type="file"
+                name="resumes"
+                multiple
+                accept=".pdf,.docx"
                 required>
+
+            <!-- Show uploaded file names -->
+            <p id="fileNames" style="margin-top:10px; font-size:13px; color:#e5e7eb;"></p>
+
         </div>
 
+        <!-- Submit Button -->
         <button type="submit" class="btn-primary">
             🚀 Screen Resumes
         </button>
 
     </form>
+
 </div>
+
+<!-- JS for showing uploaded file names -->
+<script>
+
+document.getElementById("resumeInput").addEventListener("change", function() {
+
+    const files = Array.from(this.files).map(file => file.name).join(", ");
+
+    document.getElementById("fileNames").innerText = files;
+
+});
+
+</script>
 
 </body>
 </html>
