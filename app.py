@@ -212,8 +212,7 @@ def download_csv():
 
     results = db.session.query(MatchResult, Resume)\
         .join(Resume, MatchResult.resume_id == Resume.resume_id)\
-        .order_by(MatchResult.result_id.desc())\
-        .limit(100)\
+        .order_by(MatchResult.score.desc())\
         .all()
     
     rank = 1
