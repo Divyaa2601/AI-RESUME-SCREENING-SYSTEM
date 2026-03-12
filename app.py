@@ -134,6 +134,11 @@ def index():
         return redirect(url_for("login"))
 
     if request.method == "POST":
+        # Clear previous screening results
+        MatchResult.query.delete()
+        Resume.query.delete()
+        JobDescription.query.delete()
+        db.session.commit()
 
         jd_text = request.form["jd_text"]
         files = request.files.getlist("resumes")
@@ -203,19 +208,27 @@ def download_csv():
     output = io.StringIO()
     writer = csv.writer(output)
 
-    writer.writerow(["Resume", "Score", "Matched Skills", "Missing Skills", "Experience"])
+    writer.writerow(["Rank","Resume", "Score", "Matched Skills", "Missing Skills", "Experience"])
 
-    results = MatchResult.query.all()
+    results = db.session.query(MatchResult, Resume)\
+        .join(Resume, MatchResult.resume_id == Resume.resume_id)\
+        .order_by(MatchResult.result_id.desc())\
+        .limit(100)\
+        .all()
+    
+    rank = 1
 
-    for r in results:
-
+    for r, resume in results:
         writer.writerow([
-            r.resume_id,
-            r.score,
+            rank,
+            resume.file_name,
+            f"{r.score}%",
             r.matched_skills,
             r.missing_skills,
             r.experience
         ])
+
+        rank+=1
 
     output.seek(0)
 
@@ -224,7 +237,6 @@ def download_csv():
         mimetype="text/csv",
         headers={"Content-Disposition": "attachment;filename=results.csv"}
     )
-
 
 # -----------------------------
 # RUN APP
