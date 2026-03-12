@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, session, R
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from datetime import datetime
+from extractor import format_skills
 import csv
 import io
 
@@ -180,8 +181,8 @@ def index():
                 results.append({
                     "name": file.filename,
                     "score": score,
-                    "matched": matched,
-                    "missing": missing,
+                    "matched": format_skills(matched),
+                    "missing": format_skills(missing),
                     "exp": extract_experience(text)
                 })
 

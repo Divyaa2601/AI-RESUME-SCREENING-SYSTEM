@@ -21,11 +21,11 @@
         }
 
         .skills-box .matched {
-            color: #a7f3d0; /* soft green */
+            color: #a7f3d0;
         }
 
         .skills-box .missing {
-            color: #fecaca; /* soft red */
+            color: #fecaca;
             margin-top: 4px;
         }
     </style>
@@ -35,13 +35,11 @@
 
 <div class="results-wrapper">
 
-    <!-- Page Heading -->
     <h1 class="page-title">AI Resume Screening Results</h1>
     <p class="page-subtitle">
         Explainable Resume Ranking using Skill Match Intelligence
     </p>
 
-    <!-- Results Table -->
     <div class="table-container">
         <table class="results-table">
 
@@ -63,36 +61,36 @@
             <tbody>
                 {% for row in results %}
                 <tr>
+
                     <td>{{ loop.index }}</td>
 
                     <td class="resume-name">
                         {{ row.name }}
                     </td>
 
-                    <!-- Match percentage -->
+                    <!-- FIXED SCORE DISPLAY -->
                     <td class="score-cell">
-                        {% set percent = (row.score * 100) | round(0) %}
-                        {{ percent }}%
+                        {{ row.score }}%
                     </td>
 
-                    <!-- Matched vs Missing skills -->
                     <td class="skills-box">
+
                         <div class="matched">
                             <strong>✅ Matched:</strong>
-                            {{ row.matched_skills | join(', ') if row.matched_skills else "None" }}
+                            {{ row.matched | join(', ') if row.matched else "None" }}
                         </div>
 
                         <div class="missing">
                             <strong>❌ Missing:</strong>
-                            {{ row.missing_skills | join(', ') if row.missing_skills else "None (Good fit)" }}
+                            {{ row.missing | join(', ') if row.missing else "None (Good fit)" }}
                         </div>
-
 
                     </td>
 
                     <td class="experience">
                         {{ row.exp }}
                     </td>
+
                 </tr>
                 {% endfor %}
             </tbody>
@@ -100,15 +98,14 @@
         </table>
     </div>
 
-    <!-- Action Buttons -->
     <div class="button-group">
         <a href="/download_csv" class="btn primary">⬇ Download CSV</a>
         <a href="/" class="btn secondary">← Go Back</a>
     </div>
+
     <p style="text-align:center; font-size:13px; color:#d1d5db; margin-top:20px;">
         This AI Confidence Score is generated using explainable skill-matching logic, not black-box prediction.
     </p>
-
 
 </div>
 
