@@ -1,10 +1,12 @@
-from flask import Flask, render_template, request, redirect, url_for, session, Response
+from flask import Flask, render_template, request, redirect, url_for, session, Response, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from datetime import datetime
 from extractor import format_skills
-import csv
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill
 import io
+import os
 
 from parser import extract_text
 from extractor import extract_skills, extract_experience
@@ -20,6 +22,9 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
+
+UPLOAD_FOLDER = "uploads"
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # -----------------------------
 # DATABASE MODELS
@@ -104,7 +109,6 @@ def login():
         user = User.query.filter_by(username=username).first()
 
         if user and bcrypt.check_password_hash(user.password_hash, password):
-
             session["user"] = user.username
             return redirect(url_for("index"))
 
@@ -134,7 +138,7 @@ def index():
         return redirect(url_for("login"))
 
     if request.method == "POST":
-        # Clear previous screening results
+
         MatchResult.query.delete()
         Resume.query.delete()
         JobDescription.query.delete()
@@ -155,6 +159,9 @@ def index():
 
             if allowed_file(file.filename):
 
+                filepath = os.path.join(UPLOAD_FOLDER, file.filename)
+                file.save(filepath)
+
                 text = extract_text(file)
                 resume_skills = extract_skills(text)
 
@@ -172,12 +179,14 @@ def index():
                 db.session.add(resume)
                 db.session.commit()
 
+                exp = extract_experience(text)
+
                 result = MatchResult(
                     resume_id=resume.resume_id,
                     matched_skills=", ".join(matched),
                     missing_skills=", ".join(missing),
                     score=score,
-                    experience=extract_experience(text)
+                    experience=exp
                 )
 
                 db.session.add(result)
@@ -188,54 +197,102 @@ def index():
                     "score": score,
                     "matched": format_skills(matched),
                     "missing": format_skills(missing),
-                    "exp": extract_experience(text)
+                    "exp": exp
                 })
 
         results.sort(key=lambda x: x["score"], reverse=True)
 
-        return render_template("results.html", results=results)
+        return render_template("results.html", results=results, jd_skills=format_skills(jd_skills))
 
     return render_template("index.html")
 
 
 # -----------------------------
-# CSV DOWNLOAD
+# EXCEL DOWNLOAD
 # -----------------------------
 
-@app.route("/download_csv")
-def download_csv():
+@app.route("/download_excel")
+def download_excel():
 
-    output = io.StringIO()
-    writer = csv.writer(output)
+    min_score = request.args.get("min_score", type=float)
+    min_exp = request.args.get("min_exp", type=int)
 
-    writer.writerow(["Rank","Resume", "Score", "Matched Skills", "Missing Skills", "Experience"])
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Resume Screening Results"
+
+    headers = [
+        "Rank",
+        "Resume",
+        "AI Confidence Score (%)",
+        "Matched Skills",
+        "Missing Skills",
+        "Experience"
+    ]
+
+    ws.append(headers)
+
+    header_font = Font(bold=True)
+    header_fill = PatternFill(start_color="D9E1F2", end_color="D9E1F2", fill_type="solid")
+
+    for col in ws[1]:
+        col.font = header_font
+        col.fill = header_fill
 
     results = db.session.query(MatchResult, Resume)\
         .join(Resume, MatchResult.resume_id == Resume.resume_id)\
         .order_by(MatchResult.score.desc())\
         .all()
-    
+
     rank = 1
 
     for r, resume in results:
-        writer.writerow([
+
+        score = r.score
+
+        exp_years = 0
+        if r.experience != "Not Mentioned":
+            exp_years = int(r.experience.split()[0])
+
+        if min_score and score < min_score:
+            continue
+
+        if min_exp and exp_years < min_exp:
+            continue
+
+        matched = format_skills(r.matched_skills.split(",")) if r.matched_skills else []
+        missing = format_skills(r.missing_skills.split(",")) if r.missing_skills else []
+
+        ws.append([
             rank,
             resume.file_name,
-            f"{r.score}%",
-            r.matched_skills,
-            r.missing_skills,
+            f"{score}%",
+            ", ".join(matched) if matched else "None",
+            ", ".join(missing) if missing else "None",
             r.experience
         ])
 
-        rank+=1
+        rank += 1
 
+    output = io.BytesIO()
+    wb.save(output)
     output.seek(0)
 
     return Response(
         output,
-        mimetype="text/csv",
-        headers={"Content-Disposition": "attachment;filename=results.csv"}
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": "attachment;filename=resume_results.xlsx"}
     )
+
+
+# -----------------------------
+# RESUME DOWNLOAD
+# -----------------------------
+
+@app.route("/resume/<filename>")
+def download_resume(filename):
+    return send_from_directory(UPLOAD_FOLDER, filename, as_attachment=True)
+
 
 # -----------------------------
 # RUN APP

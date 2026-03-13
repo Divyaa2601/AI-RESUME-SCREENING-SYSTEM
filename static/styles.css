@@ -149,23 +149,37 @@ input[type="file"]{
     margin-bottom:10px;
 }
 
-/* Google button */
+/* ===== GOOGLE LOGIN BUTTON ===== */
 .google-btn{
-    display:block;
-    padding:12px;
-    margin-top:15px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:12px;
+    margin-top:10px;
+    padding:14px;
+    width:100%;
+    background:#ffffff;
+    color:#374151;
     border-radius:10px;
-    background:white;
-    color:#333;
-    font-weight:600;
     text-decoration:none;
+    font-weight:600;
+    font-size:15px;
+    box-shadow:0 4px 12px rgba(0,0,0,0.2);
+    transition:0.3s;
 }
 
 .google-btn:hover{
-    background:#f3f4f6;
+    transform:translateY(-2px);
+    box-shadow:0 10px 25px rgba(0,0,0,0.3);
+}
+
+.google-icon{
+    width:20px;
+    height:20px;
 }
 
 /* ========== RESULTS PAGE ========== */
+
 .page-title{
     text-align:center;
     font-size:34px;
@@ -178,7 +192,38 @@ input[type="file"]{
     margin-bottom:30px;
 }
 
-/* Table container */
+/* ===== SEARCH BOX ===== */
+
+.search-box{
+    display:flex;
+    justify-content:center;
+    margin:25px 0;
+}
+
+.search-container{
+    display:flex;
+    align-items:center;
+    background:white;
+    border-radius:12px;
+    padding:8px 12px;
+    width:420px;
+}
+
+.search-icon{
+    font-size:18px;
+    margin-right:8px;
+}
+
+.search-container input{
+    border:none;
+    outline:none;
+    font-size:15px;
+    width:100%;
+    padding:8px;
+}
+
+/* ===== TABLE ===== */
+
 .table-container{
     width:92%;
     margin:0 auto;
@@ -215,6 +260,7 @@ input[type="file"]{
 }
 
 /* ========== BUTTON GROUP ========== */
+
 .button-group{
     text-align:center;
     margin:40px 0;
@@ -240,75 +286,21 @@ input[type="file"]{
 .btn.secondary{
     background:#374151;
 }
-/* ===== GOOGLE LOGIN BUTTON ===== */
-.google-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
 
-    margin-top: 10px;
-    padding: 14px;
-    width: 100%;
+/* ===== SCORE DISPLAY ===== */
 
-    background: #ffffff;
-    color: #374151;
+.score-cell{
+    text-align:center;
+    font-weight:600;
+}
 
-    border-radius: 10px;
-    text-decoration: none;
+.score-text{
+    font-size:16px;
+    color:#ffffff;
+    letter-spacing:0.3px;
+}
+.sort-box select {
+    background: white;
     font-weight: 600;
-    font-size: 15px;
-
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    transition: 0.3s;
-}
-
-.google-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-}
-
-.google-icon {
-    width: 20px;
-    height: 20px;
-}
-/* ===== SCORE BADGE ===== */
-
-.score-cell {
-    text-align: center;
-    min-width: 140px;
-}
-
-.score-badge {
-    display: inline-block;
-    padding: 6px 14px;
-    border-radius: 999px;
-    font-size: 13px;
-    font-weight: 600;
-    margin-bottom: 6px;
-
-    background: linear-gradient(90deg, #3b82f6, #6366f1);
-    color: white;
-}
-/* ===== SCORE BADGE (NO BAR) ===== */
-
-.score-cell {
-    text-align: center;
-    min-width: 140px;
-}
-/* ===== CLEAN SCORE TEXT ===== */
-
-.score-cell {
-    text-align: center;
-    font-weight: 600;
-}
-
-.score-text {
-    font-size: 15px;
-    color: #e5e7eb;   /* soft white */
-}
-.score-text {
-    font-size: 16px;
-    color: #ffffff;
-    letter-spacing: 0.3px;
+    cursor: pointer;
 }

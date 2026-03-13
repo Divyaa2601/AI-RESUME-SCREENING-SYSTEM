@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Resume Screening Results</title>
@@ -28,7 +29,39 @@
             color: #fecaca;
             margin-top: 4px;
         }
+
+        .filter-box {
+            text-align: center;
+            margin: 25px 0;
+        }
+
+        .filter-box input {
+            padding: 10px;
+            border-radius: 8px;
+            border: none;
+            margin: 10px;
+            width: 150px;
+        }
+
+        .dashboard-info {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 15px;
+            color: #d1d5db;
+        }
+
+        .sort-box {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .sort-box select {
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: none;
+        }
     </style>
+
 </head>
 
 <body>
@@ -36,30 +69,71 @@
 <div class="results-wrapper">
 
     <h1 class="page-title">AI Resume Screening Results</h1>
+
     <p class="page-subtitle">
         Explainable Resume Ranking using Skill Match Intelligence
     </p>
 
+    <!-- JD Skills -->
+
+    <div class="dashboard-info">
+        <b>Detected JD Skills:</b>
+        {{ jd_skills | join(', ') if jd_skills else "Not detected" }}
+    </div>
+
+    <!-- Candidate Count -->
+
+    <div class="dashboard-info">
+        <b>Total Candidates:</b> {{ results | length }}
+    </div>
+
+    <!-- SEARCH BOX -->
+
+    <div class="search-box">
+        <div class="search-container">
+            <span class="search-icon">🔍</span>
+            <input
+                type="text"
+                id="searchBox"
+                placeholder="Search by skill, resume name, or experience..."
+            >
+        </div>
+    </div>
+
+    <!-- SORT DROPDOWN -->
+
+    <div class="sort-box">
+
+        <label><b>Sort By:</b></label>
+
+        <select id="sortSelect">
+            <option value="score">Score</option>
+            <option value="experience">Experience</option>
+        </select>
+
+    </div>
+
+    <!-- RESULTS TABLE -->
+
     <div class="table-container">
+
         <table class="results-table">
 
             <thead>
                 <tr>
                     <th>Rank</th>
                     <th>Resume Name</th>
-                    <th>
-                        AI Confidence Score
-                        <span title="Calculated based on explicit skill overlap between Job Description and Resume using NLP techniques">
-                            ⓘ
-                        </span>
-                    </th>
+                    <th>AI Confidence Score</th>
                     <th>Skill Analysis</th>
                     <th>Experience</th>
+                    <th>Download Resume</th>
                 </tr>
             </thead>
 
             <tbody>
+
                 {% for row in results %}
+
                 <tr>
 
                     <td>{{ loop.index }}</td>
@@ -68,7 +142,6 @@
                         {{ row.name }}
                     </td>
 
-                    <!-- FIXED SCORE DISPLAY -->
                     <td class="score-cell">
                         {{ row.score }}%
                     </td>
@@ -87,27 +160,183 @@
 
                     </td>
 
-                    <td class="experience">
+                    <td>
                         {{ row.exp }}
                     </td>
 
+                    <td>
+                        <a href="/resume/{{ row.name }}" class="btn secondary">
+                            Download
+                        </a>
+                    </td>
+
                 </tr>
+
                 {% endfor %}
+
             </tbody>
 
         </table>
+
     </div>
 
+    <!-- FILTER SECTION -->
+
+    <div class="filter-box">
+
+        <form method="GET" action="/download_excel">
+
+            <label>Minimum Score (%)</label>
+
+            <input
+                type="number"
+                id="min_score"
+                name="min_score"
+                placeholder="Score"
+            >
+
+            <label>Minimum Experience</label>
+
+            <input
+                type="number"
+                id="min_exp"
+                name="min_exp"
+                placeholder="Experience"
+            >
+
+            <br><br>
+
+            <button type="submit" class="btn primary" id="downloadBtn">
+                ⬇ Download Excel
+            </button>
+
+        </form>
+
+    </div>
+
+    <!-- TOP 5 DOWNLOAD -->
+
+    <div style="text-align:center; margin-bottom:20px;">
+        <a href="/download_excel?top=5" class="btn primary">
+            ⬇ Download Top 5 Candidates
+        </a>
+    </div>
+
+    <!-- BACK BUTTON -->
+
     <div class="button-group">
-        <a href="/download_csv" class="btn primary">⬇ Download CSV</a>
-        <a href="/" class="btn secondary">← Go Back</a>
+        <a href="/" class="btn secondary">
+            ← Go Back
+        </a>
     </div>
 
     <p style="text-align:center; font-size:13px; color:#d1d5db; margin-top:20px;">
-        This AI Confidence Score is generated using explainable skill-matching logic, not black-box prediction.
+        This AI Confidence Score is generated using explainable skill-matching logic.
     </p>
 
 </div>
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    /* SEARCH FUNCTION */
+
+    const searchBox = document.getElementById("searchBox");
+
+    searchBox.addEventListener("keyup", function () {
+
+        const value = searchBox.value.toLowerCase();
+        const rows = document.querySelectorAll(".results-table tbody tr");
+
+        rows.forEach(function (row) {
+
+            const resumeName = row.cells[1].textContent.toLowerCase();
+            const matchedSkills = row.cells[3].querySelector(".matched").textContent.toLowerCase();
+            const experience = row.cells[4].textContent.toLowerCase();
+
+            if (
+                resumeName.includes(value) ||
+                matchedSkills.includes(value) ||
+                experience.includes(value)
+            ) {
+                row.style.display = "";
+            } else {
+                row.style.display = "none";
+            }
+
+        });
+
+    });
+
+
+    /* FILTER BUTTON TEXT */
+
+    const scoreInput = document.getElementById("min_score");
+    const expInput = document.getElementById("min_exp");
+    const downloadBtn = document.getElementById("downloadBtn");
+
+    function updateButton() {
+
+        if (scoreInput.value || expInput.value) {
+            downloadBtn.innerText = "⬇ Download Filtered Excel";
+        } else {
+            downloadBtn.innerText = "⬇ Download Excel";
+        }
+
+    }
+
+    scoreInput.addEventListener("input", updateButton);
+    expInput.addEventListener("input", updateButton);
+
+
+    /* SORT FUNCTION */
+
+    const sortSelect = document.getElementById("sortSelect");
+
+    sortSelect.addEventListener("change", function () {
+
+        const rows = Array.from(document.querySelectorAll(".results-table tbody tr"));
+
+        let sortedRows;
+
+        if (sortSelect.value === "experience") {
+
+            sortedRows = rows.sort((a, b) => {
+
+                let expA = a.cells[4].textContent.match(/\d+/);
+                let expB = b.cells[4].textContent.match(/\d+/);
+
+                expA = expA ? parseInt(expA[0]) : 0;
+                expB = expB ? parseInt(expB[0]) : 0;
+
+                return expB - expA;
+
+            });
+
+        } else {
+
+            sortedRows = rows.sort((a, b) => {
+
+                let scoreA = parseFloat(a.cells[2].textContent);
+                let scoreB = parseFloat(b.cells[2].textContent);
+
+                return scoreB - scoreA;
+
+            });
+
+        }
+
+        const tbody = document.querySelector(".results-table tbody");
+        tbody.innerHTML = "";
+
+        sortedRows.forEach(row => tbody.appendChild(row));
+
+    });
+
+});
+
+</script>
 
 </body>
 </html>
