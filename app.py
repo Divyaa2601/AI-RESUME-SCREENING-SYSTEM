@@ -2,14 +2,15 @@ from flask import Flask, render_template, request, redirect, url_for, session, R
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from datetime import datetime
-from extractor import format_skills
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill
+
 import io
 import os
 
 from parser import extract_text
-from extractor import extract_skills, extract_experience
+from extractor import extract_skills, extract_experience, format_skills
+
 
 app = Flask(__name__)
 app.secret_key = "resume_screening_secret_key"
@@ -17,8 +18,9 @@ app.secret_key = "resume_screening_secret_key"
 # -----------------------------
 # DATABASE CONFIGURATION
 # -----------------------------
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:divya2601@localhost:5432/resume_screening'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://postgres:divya2601@localhost:5432/resume_screening"
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
@@ -79,6 +81,7 @@ def allowed_file(filename):
 def signup():
 
     if request.method == "POST":
+
         username = request.form["username"]
         password = request.form["password"]
 
@@ -123,6 +126,7 @@ def login():
 
 @app.route("/logout")
 def logout():
+
     session.clear()
     return redirect(url_for("login"))
 
@@ -163,6 +167,7 @@ def index():
                 file.save(filepath)
 
                 text = extract_text(file)
+
                 resume_skills = extract_skills(text)
 
                 matched = resume_skills & jd_skills
@@ -202,7 +207,11 @@ def index():
 
         results.sort(key=lambda x: x["score"], reverse=True)
 
-        return render_template("results.html", results=results, jd_skills=format_skills(jd_skills))
+        return render_template(
+            "results.html",
+            results=results,
+            jd_skills=format_skills(jd_skills)
+        )
 
     return render_template("index.html")
 
@@ -284,13 +293,13 @@ def download_excel():
         headers={"Content-Disposition": "attachment;filename=resume_results.xlsx"}
     )
 
-
 # -----------------------------
 # RESUME DOWNLOAD
 # -----------------------------
 
 @app.route("/resume/<filename>")
 def download_resume(filename):
+
     return send_from_directory(UPLOAD_FOLDER, filename, as_attachment=True)
 
 
