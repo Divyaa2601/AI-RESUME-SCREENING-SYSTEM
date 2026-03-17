@@ -2,12 +2,14 @@
 <html lang="en">
 
 <head>
+
     <meta charset="UTF-8">
     <title>Resume Screening Results</title>
 
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 
     <style>
+
         .score-cell {
             text-align: center;
             font-weight: 600;
@@ -60,58 +62,87 @@
             border-radius: 6px;
             border: none;
         }
+
     </style>
 
 </head>
+
 
 <body>
 
 <div class="results-wrapper">
 
-    <h1 class="page-title">AI Resume Screening Results</h1>
+    <h1 class="page-title">
+        AI Resume Screening Results
+    </h1>
 
     <p class="page-subtitle">
         Explainable Resume Ranking using Skill Match Intelligence
     </p>
 
-    <!-- JD Skills -->
+
+    <!-- JD SKILLS -->
 
     <div class="dashboard-info">
+
         <b>Detected JD Skills:</b>
-        {{ jd_skills | join(', ') if jd_skills else "Not detected" }}
+
+        <div class="jd-skills">
+
+            {% for skill in jd_skills %}
+                <span class="skill-tag">{{ skill }}</span>
+            {% endfor %}
+
+        </div>
+
     </div>
 
-    <!-- Candidate Count -->
+
+    <!-- TOTAL CANDIDATES -->
 
     <div class="dashboard-info">
+
         <b>Total Candidates:</b> {{ results | length }}
+
     </div>
+
 
     <!-- SEARCH BOX -->
 
     <div class="search-box">
+
         <div class="search-container">
+
             <span class="search-icon">🔍</span>
+
             <input
                 type="text"
                 id="searchBox"
                 placeholder="Search by skill, resume name, or experience..."
             >
+
         </div>
+
     </div>
+
 
     <!-- SORT DROPDOWN -->
 
     <div class="sort-box">
 
-        <label><b>Sort By:</b></label>
+        <label>
+            <b>Sort By:</b>
+        </label>
 
         <select id="sortSelect">
+
             <option value="score">Score</option>
             <option value="experience">Experience</option>
+
         </select>
 
     </div>
+
 
     <!-- RESULTS TABLE -->
 
@@ -120,6 +151,7 @@
         <table class="results-table">
 
             <thead>
+
                 <tr>
                     <th>Rank</th>
                     <th>Resume Name</th>
@@ -128,7 +160,9 @@
                     <th>Experience</th>
                     <th>Download Resume</th>
                 </tr>
+
             </thead>
+
 
             <tbody>
 
@@ -149,25 +183,40 @@
                     <td class="skills-box">
 
                         <div class="matched">
+
                             <strong>✅ Matched:</strong>
+
                             {{ row.matched | join(', ') if row.matched else "None" }}
+
                         </div>
 
+
                         <div class="missing">
+
                             <strong>❌ Missing:</strong>
+
                             {{ row.missing | join(', ') if row.missing else "None (Good fit)" }}
+
                         </div>
 
                     </td>
+
 
                     <td>
                         {{ row.exp }}
                     </td>
 
+
                     <td>
-                        <a href="/resume/{{ row.name }}" class="btn secondary">
+
+                        <a href="/download/{{ row.name }}" class="btn secondary">
                             Download
                         </a>
+
+                        <a href="/resume/{{ row.name }}" target="_blank" class="btn primary">
+                            Preview
+                        </a>
+
                     </td>
 
                 </tr>
@@ -180,13 +229,17 @@
 
     </div>
 
+
+
     <!-- FILTER SECTION -->
 
     <div class="filter-box">
 
         <form method="GET" action="/download_excel">
 
-            <label>Minimum Score (%)</label>
+            <label>
+                Minimum Score (%)
+            </label>
 
             <input
                 type="number"
@@ -195,7 +248,10 @@
                 placeholder="Score"
             >
 
-            <label>Minimum Experience</label>
+
+            <label>
+                Minimum Experience
+            </label>
 
             <input
                 type="number"
@@ -203,6 +259,7 @@
                 name="min_exp"
                 placeholder="Experience"
             >
+
 
             <br><br>
 
@@ -214,27 +271,40 @@
 
     </div>
 
-    <!-- TOP 5 DOWNLOAD -->
+
+
+    <!-- DOWNLOAD TOP 5 -->
 
     <div style="text-align:center; margin-bottom:20px;">
+
         <a href="/download_excel?top=5" class="btn primary">
             ⬇ Download Top 5 Candidates
         </a>
+
     </div>
+
+
 
     <!-- BACK BUTTON -->
 
     <div class="button-group">
+
         <a href="/" class="btn secondary">
             ← Go Back
         </a>
+
     </div>
+
+
 
     <p style="text-align:center; font-size:13px; color:#d1d5db; margin-top:20px;">
         This AI Confidence Score is generated using explainable skill-matching logic.
     </p>
 
+
 </div>
+
+
 
 <script>
 
@@ -247,6 +317,7 @@ document.addEventListener("DOMContentLoaded", function () {
     searchBox.addEventListener("keyup", function () {
 
         const value = searchBox.value.toLowerCase();
+
         const rows = document.querySelectorAll(".results-table tbody tr");
 
         rows.forEach(function (row) {
@@ -260,14 +331,19 @@ document.addEventListener("DOMContentLoaded", function () {
                 matchedSkills.includes(value) ||
                 experience.includes(value)
             ) {
+
                 row.style.display = "";
+
             } else {
+
                 row.style.display = "none";
+
             }
 
         });
 
     });
+
 
 
     /* FILTER BUTTON TEXT */
@@ -279,9 +355,13 @@ document.addEventListener("DOMContentLoaded", function () {
     function updateButton() {
 
         if (scoreInput.value || expInput.value) {
+
             downloadBtn.innerText = "⬇ Download Filtered Excel";
+
         } else {
+
             downloadBtn.innerText = "⬇ Download Excel";
+
         }
 
     }
@@ -290,13 +370,16 @@ document.addEventListener("DOMContentLoaded", function () {
     expInput.addEventListener("input", updateButton);
 
 
+
     /* SORT FUNCTION */
 
     const sortSelect = document.getElementById("sortSelect");
 
     sortSelect.addEventListener("change", function () {
 
-        const rows = Array.from(document.querySelectorAll(".results-table tbody tr"));
+        const rows = Array.from(
+            document.querySelectorAll(".results-table tbody tr")
+        );
 
         let sortedRows;
 
@@ -328,6 +411,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         const tbody = document.querySelector(".results-table tbody");
+
         tbody.innerHTML = "";
 
         sortedRows.forEach(row => tbody.appendChild(row));
@@ -338,5 +422,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 </script>
 
+
 </body>
+
 </html>

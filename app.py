@@ -1,4 +1,14 @@
-from flask import Flask, render_template, request, redirect, url_for, session, Response, send_from_directory
+from flask import (
+    Flask,
+    render_template,
+    request,
+    redirect,
+    url_for,
+    session,
+    Response,
+    send_from_directory
+)
+
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from datetime import datetime
@@ -12,14 +22,16 @@ from parser import extract_text
 from extractor import extract_skills, extract_experience, format_skills
 
 
+# =====================================================
+# APP CONFIGURATION
+# =====================================================
+
 app = Flask(__name__)
 app.secret_key = "resume_screening_secret_key"
 
-# -----------------------------
-# DATABASE CONFIGURATION
-# -----------------------------
+app.config["SQLALCHEMY_DATABASE_URI"] = \
+    "postgresql://postgres:divya2601@localhost:5432/resume_screening"
 
-app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://postgres:divya2601@localhost:5432/resume_screening"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
@@ -28,9 +40,10 @@ bcrypt = Bcrypt(app)
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# -----------------------------
+
+# =====================================================
 # DATABASE MODELS
-# -----------------------------
+# =====================================================
 
 class User(db.Model):
     user_id = db.Column(db.Integer, primary_key=True)
@@ -63,9 +76,9 @@ class MatchResult(db.Model):
     experience = db.Column(db.String(50))
 
 
-# -----------------------------
+# =====================================================
 # FILE VALIDATION
-# -----------------------------
+# =====================================================
 
 ALLOWED_EXTENSIONS = {"pdf", "docx"}
 
@@ -73,9 +86,9 @@ def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-# -----------------------------
-# SIGNUP
-# -----------------------------
+# =====================================================
+# USER AUTHENTICATION
+# =====================================================
 
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
@@ -87,7 +100,10 @@ def signup():
 
         hashed_pw = bcrypt.generate_password_hash(password).decode("utf-8")
 
-        user = User(username=username, password_hash=hashed_pw)
+        user = User(
+            username=username,
+            password_hash=hashed_pw
+        )
 
         db.session.add(user)
         db.session.commit()
@@ -96,10 +112,6 @@ def signup():
 
     return render_template("signup.html")
 
-
-# -----------------------------
-# LOGIN
-# -----------------------------
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -120,10 +132,6 @@ def login():
     return render_template("login.html")
 
 
-# -----------------------------
-# LOGOUT
-# -----------------------------
-
 @app.route("/logout")
 def logout():
 
@@ -131,9 +139,9 @@ def logout():
     return redirect(url_for("login"))
 
 
-# -----------------------------
-# MAIN PAGE
-# -----------------------------
+# =====================================================
+# MAIN APPLICATION PAGE
+# =====================================================
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -143,6 +151,7 @@ def index():
 
     if request.method == "POST":
 
+        # Clear old results
         MatchResult.query.delete()
         Resume.query.delete()
         JobDescription.query.delete()
@@ -151,6 +160,7 @@ def index():
         jd_text = request.form["jd_text"]
         files = request.files.getlist("resumes")
 
+        # Save Job Description
         jd = JobDescription(description=jd_text)
         db.session.add(jd)
         db.session.commit()
@@ -173,8 +183,12 @@ def index():
                 matched = resume_skills & jd_skills
                 missing = jd_skills - resume_skills
 
-                score = round((len(matched) / len(jd_skills)) * 100, 2) if jd_skills else 0
+                score = (
+                    round((len(matched) / len(jd_skills)) * 100, 2)
+                    if jd_skills else 0
+                )
 
+                # Save Resume
                 resume = Resume(
                     jd_id=jd.jd_id,
                     file_name=file.filename,
@@ -205,6 +219,7 @@ def index():
                     "exp": exp
                 })
 
+        # Sort candidates by score
         results.sort(key=lambda x: x["score"], reverse=True)
 
         return render_template(
@@ -216,9 +231,9 @@ def index():
     return render_template("index.html")
 
 
-# -----------------------------
-# EXCEL DOWNLOAD
-# -----------------------------
+# =====================================================
+# EXCEL EXPORT
+# =====================================================
 
 @app.route("/download_excel")
 def download_excel():
@@ -242,16 +257,22 @@ def download_excel():
     ws.append(headers)
 
     header_font = Font(bold=True)
-    header_fill = PatternFill(start_color="D9E1F2", end_color="D9E1F2", fill_type="solid")
+    header_fill = PatternFill(
+        start_color="D9E1F2",
+        end_color="D9E1F2",
+        fill_type="solid"
+    )
 
     for col in ws[1]:
         col.font = header_font
         col.fill = header_fill
 
-    results = db.session.query(MatchResult, Resume)\
-        .join(Resume, MatchResult.resume_id == Resume.resume_id)\
-        .order_by(MatchResult.score.desc())\
+    results = (
+        db.session.query(MatchResult, Resume)
+        .join(Resume, MatchResult.resume_id == Resume.resume_id)
+        .order_by(MatchResult.score.desc())
         .all()
+    )
 
     rank = 1
 
@@ -290,22 +311,33 @@ def download_excel():
     return Response(
         output,
         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": "attachment;filename=resume_results.xlsx"}
+        headers={
+            "Content-Disposition": "attachment;filename=resume_results.xlsx"
+        }
     )
 
-# -----------------------------
-# RESUME DOWNLOAD
-# -----------------------------
+
+# =====================================================
+# RESUME PREVIEW & DOWNLOAD
+# =====================================================
 
 @app.route("/resume/<filename>")
+def preview_resume(filename):
+    return send_from_directory(UPLOAD_FOLDER, filename)
+
+
+@app.route("/download/<filename>")
 def download_resume(filename):
+    return send_from_directory(
+        UPLOAD_FOLDER,
+        filename,
+        as_attachment=True
+    )
 
-    return send_from_directory(UPLOAD_FOLDER, filename, as_attachment=True)
 
-
-# -----------------------------
-# RUN APP
-# -----------------------------
+# =====================================================
+# RUN APPLICATION
+# =====================================================
 
 if __name__ == "__main__":
 
