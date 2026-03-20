@@ -2,69 +2,80 @@
 <html lang="en">
 
 <head>
+<meta charset="UTF-8">
+<title>Resume Screening Results</title>
 
-    <meta charset="UTF-8">
-    <title>Resume Screening Results</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+<style>
 
-    <style>
+.score-cell {
+    text-align: center;
+    font-weight: 600;
+    font-size: 15px;
+    color: #e5e7eb;
+}
 
-        .score-cell {
-            text-align: center;
-            font-weight: 600;
-            font-size: 15px;
-            color: #e5e7eb;
-        }
+.skills-box {
+    text-align: left;
+    font-size: 13px;
+    line-height: 1.5;
+}
 
-        .skills-box {
-            text-align: left;
-            font-size: 13px;
-            line-height: 1.5;
-        }
+.skills-box .matched {
+    color: #a7f3d0;
+}
 
-        .skills-box .matched {
-            color: #a7f3d0;
-        }
+.skills-box .missing {
+    color: #fecaca;
+    margin-top: 4px;
+}
 
-        .skills-box .missing {
-            color: #fecaca;
-            margin-top: 4px;
-        }
+.dashboard-info {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 15px;
+    color: #d1d5db;
+}
 
-        .filter-box {
-            text-align: center;
-            margin: 25px 0;
-        }
+.filter-box {
+    text-align: center;
+    margin: 25px 0;
+}
 
-        .filter-box input {
-            padding: 10px;
-            border-radius: 8px;
-            border: none;
-            margin: 10px;
-            width: 150px;
-        }
+.filter-row {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 40px;
+    flex-wrap: wrap;
+}
 
-        .dashboard-info {
-            text-align: center;
-            margin-bottom: 20px;
-            font-size: 15px;
-            color: #d1d5db;
-        }
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
 
-        .sort-box {
-            text-align: center;
-            margin-bottom: 20px;
-        }
+.filter-group input,
+.filter-group select {
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    width: 160px;
+    margin-top: 5px;
+}
 
-        .sort-box select {
-            padding: 6px 10px;
-            border-radius: 6px;
-            border: none;
-        }
+.pagination {
+    text-align: center;
+    margin: 30px 0;
+}
 
-    </style>
+.pagination button {
+    margin: 5px;
+}
 
+</style>
 </head>
 
 
@@ -72,357 +83,394 @@
 
 <div class="results-wrapper">
 
-    <h1 class="page-title">
-        AI Resume Screening Results
-    </h1>
+<h1 class="page-title">AI Resume Screening Results</h1>
 
-    <p class="page-subtitle">
-        Explainable Resume Ranking using Skill Match Intelligence
-    </p>
+<p class="page-subtitle">
+Explainable Resume Ranking using Skill Match Intelligence
+</p>
 
 
-    <!-- JD SKILLS -->
+<div class="dashboard-info">
+<b>Detected JD Skills:</b>
 
-    <div class="dashboard-info">
+<div class="jd-skills">
+{% for skill in jd_skills %}
+<span class="skill-tag">{{ skill }}</span>
+{% endfor %}
+</div>
+</div>
 
-        <b>Detected JD Skills:</b>
 
-        <div class="jd-skills">
+<div class="dashboard-info">
+<b>Total Candidates:</b> {{ results | length }}
+</div>
 
-            {% for skill in jd_skills %}
-                <span class="skill-tag">{{ skill }}</span>
-            {% endfor %}
 
-        </div>
+<!-- SEARCH -->
 
-    </div>
+<div class="search-box">
+<div class="search-container">
 
+<span class="search-icon">🔍</span>
 
-    <!-- TOTAL CANDIDATES -->
+<input
+type="text"
+id="searchBox"
+placeholder="Search by skill, resume name, or experience..."
+>
 
-    <div class="dashboard-info">
+</div>
+</div>
 
-        <b>Total Candidates:</b> {{ results | length }}
 
-    </div>
+<!-- FILTER -->
 
+<div class="filter-box">
 
-    <!-- SEARCH BOX -->
+<div class="filter-row">
 
-    <div class="search-box">
+<div class="filter-group">
+<label>Minimum Score (%)</label>
+<input type="number" id="min_score" placeholder="Score">
+</div>
 
-        <div class="search-container">
+<div class="filter-group">
+<label>Minimum Experience</label>
+<input type="number" id="min_exp" placeholder="Experience">
+</div>
 
-            <span class="search-icon">🔍</span>
+<div class="filter-group">
 
-            <input
-                type="text"
-                id="searchBox"
-                placeholder="Search by skill, resume name, or experience..."
-            >
+<label>Sort By</label>
 
-        </div>
+<select id="sortSelect">
+<option value="score">Score</option>
+<option value="experience">Experience</option>
+</select>
 
-    </div>
+</div>
 
+</div>
+</div>
 
-    <!-- SORT DROPDOWN -->
 
-    <div class="sort-box">
+<!-- TABLE -->
 
-        <label>
-            <b>Sort By:</b>
-        </label>
+<div class="table-container">
 
-        <select id="sortSelect">
+<table class="results-table">
 
-            <option value="score">Score</option>
-            <option value="experience">Experience</option>
+<thead>
+<tr>
+<th>Rank</th>
+<th>Resume Name</th>
+<th>AI Confidence Score</th>
+<th>Skill Analysis</th>
+<th>Experience</th>
+<th>Actions</th>
+</tr>
+</thead>
 
-        </select>
+<tbody id="tableBody">
 
-    </div>
+{% for row in results %}
 
+<tr>
 
-    <!-- RESULTS TABLE -->
+<td>{{ loop.index }}</td>
 
-    <div class="table-container">
+<td class="resume-name">{{ row.name }}</td>
 
-        <table class="results-table">
+<td class="score-cell">{{ row.score }}%</td>
 
-            <thead>
+<td class="skills-box">
 
-                <tr>
-                    <th>Rank</th>
-                    <th>Resume Name</th>
-                    <th>AI Confidence Score</th>
-                    <th>Skill Analysis</th>
-                    <th>Experience</th>
-                    <th>Download Resume</th>
-                </tr>
+<div class="matched">
+<strong>✅ Matched:</strong>
+{{ row.matched | join(', ') if row.matched else "None" }}
+</div>
 
-            </thead>
+<div class="missing">
+<strong>❌ Missing:</strong>
+{{ row.missing | join(', ') if row.missing else "None (Good fit)" }}
+</div>
 
+</td>
 
-            <tbody>
+<td>{{ row.exp }}</td>
 
-                {% for row in results %}
+<td>
 
-                <tr>
+<a href="/download/{{ row.name }}" class="btn secondary">
+⬇ Download
+</a>
 
-                    <td>{{ loop.index }}</td>
+<a href="/resume/{{ row.name }}" target="_blank" class="btn primary">
+👁 Preview
+</a>
 
-                    <td class="resume-name">
-                        {{ row.name }}
-                    </td>
+</td>
 
-                    <td class="score-cell">
-                        {{ row.score }}%
-                    </td>
+</tr>
 
-                    <td class="skills-box">
+{% endfor %}
 
-                        <div class="matched">
+</tbody>
 
-                            <strong>✅ Matched:</strong>
-
-                            {{ row.matched | join(', ') if row.matched else "None" }}
-
-                        </div>
-
-
-                        <div class="missing">
-
-                            <strong>❌ Missing:</strong>
-
-                            {{ row.missing | join(', ') if row.missing else "None (Good fit)" }}
-
-                        </div>
-
-                    </td>
-
-
-                    <td>
-                        {{ row.exp }}
-                    </td>
-
-
-                    <td>
-
-                        <a href="/download/{{ row.name }}" class="btn secondary">
-                            Download
-                        </a>
-
-                        <a href="/resume/{{ row.name }}" target="_blank" class="btn primary">
-                            Preview
-                        </a>
-
-                    </td>
-
-                </tr>
-
-                {% endfor %}
-
-            </tbody>
-
-        </table>
-
-    </div>
-
-
-
-    <!-- FILTER SECTION -->
-
-    <div class="filter-box">
-
-        <form method="GET" action="/download_excel">
-
-            <label>
-                Minimum Score (%)
-            </label>
-
-            <input
-                type="number"
-                id="min_score"
-                name="min_score"
-                placeholder="Score"
-            >
-
-
-            <label>
-                Minimum Experience
-            </label>
-
-            <input
-                type="number"
-                id="min_exp"
-                name="min_exp"
-                placeholder="Experience"
-            >
-
-
-            <br><br>
-
-            <button type="submit" class="btn primary" id="downloadBtn">
-                ⬇ Download Excel
-            </button>
-
-        </form>
-
-    </div>
-
-
-
-    <!-- DOWNLOAD TOP 5 -->
-
-    <div style="text-align:center; margin-bottom:20px;">
-
-        <a href="/download_excel?top=5" class="btn primary">
-            ⬇ Download Top 5 Candidates
-        </a>
-
-    </div>
-
-
-
-    <!-- BACK BUTTON -->
-
-    <div class="button-group">
-
-        <a href="/" class="btn secondary">
-            ← Go Back
-        </a>
-
-    </div>
-
-
-
-    <p style="text-align:center; font-size:13px; color:#d1d5db; margin-top:20px;">
-        This AI Confidence Score is generated using explainable skill-matching logic.
-    </p>
-
+</table>
 
 </div>
 
 
+<!-- PAGINATION -->
+
+<div class="pagination" id="pagination"></div>
+
+
+<!-- DOWNLOAD ALL -->
+
+<div style="text-align:center;margin-top:20px;">
+<a href="/download_excel" class="btn primary">
+⬇ Download Excel
+</a>
+</div>
+
+
+<!-- DOWNLOAD FILTERED -->
+
+<div style="text-align:center;margin-top:15px;">
+<a href="#" id="downloadFilteredBtn" class="btn primary">
+⬇ Download Filtered Excel
+</a>
+</div>
+
+
+<div class="button-group">
+
+<a href="/" class="btn secondary">
+← Go Back
+</a>
+
+</div>
+
+</div>
+
 
 <script>
 
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", function(){
 
-    /* SEARCH FUNCTION */
+let rows = Array.from(document.querySelectorAll("#tableBody tr"));
+let filteredRows = [...rows];
 
-    const searchBox = document.getElementById("searchBox");
+const rowsPerPage = 5;
+let currentPage = 1;
 
-    searchBox.addEventListener("keyup", function () {
+const searchBox = document.getElementById("searchBox");
+const minScoreInput = document.getElementById("min_score");
+const minExpInput = document.getElementById("min_exp");
+const sortSelect = document.getElementById("sortSelect");
 
-        const value = searchBox.value.toLowerCase();
 
-        const rows = document.querySelectorAll(".results-table tbody tr");
+/* FILTER */
 
-        rows.forEach(function (row) {
+function applyFilters(){
 
-            const resumeName = row.cells[1].textContent.toLowerCase();
-            const matchedSkills = row.cells[3].querySelector(".matched").textContent.toLowerCase();
-            const experience = row.cells[4].textContent.toLowerCase();
+    const searchValue = searchBox.value.toLowerCase();
+    const minScore = parseFloat(minScoreInput.value) || 0;
+    const minExp = parseFloat(minExpInput.value) || 0;
 
-            if (
-                resumeName.includes(value) ||
-                matchedSkills.includes(value) ||
-                experience.includes(value)
-            ) {
+    filteredRows = rows.filter(row => {
 
-                row.style.display = "";
+        const name = row.cells[1].textContent.toLowerCase();
 
-            } else {
+        const matchedSkills = row.querySelector(".matched").textContent.toLowerCase();
+        const missingSkills = row.querySelector(".missing").textContent.toLowerCase();
 
-                row.style.display = "none";
+        const score = parseFloat(row.cells[2].textContent);
 
-            }
+        const expText = row.cells[4].textContent;
+        const expMatch = expText.match(/\d+/);
+        const exp = expMatch ? parseInt(expMatch[0]) : 0;
 
-        });
+        // ✅ FIXED SEARCH (name + skills)
+        let matchesSearch = true;
+
+        if (searchValue) {
+            matchesSearch =
+                matchedSkills.includes(searchValue) ||
+                name.includes(searchValue);
+        }
+
+        const matchesScore = score >= minScore;
+        const matchesExp = exp >= minExp;
+
+        return matchesSearch && matchesScore && matchesExp;
 
     });
 
+    currentPage = 1;
+    renderTable();
+}
+
+/* SORT */
+
+function sortRows(){
+
+filteredRows.sort((a,b)=>{
+
+if(sortSelect.value === "experience"){
+
+let expA = a.cells[4].textContent.match(/\d+/);
+let expB = b.cells[4].textContent.match(/\d+/);
+
+expA = expA ? parseInt(expA[0]) : 0;
+expB = expB ? parseInt(expB[0]) : 0;
+
+return expB - expA;
+
+}
+else{
+
+let scoreA = parseFloat(a.cells[2].textContent);
+let scoreB = parseFloat(b.cells[2].textContent);
+
+return scoreB - scoreA;
+
+}
+
+});
+
+renderTable();
+
+}
 
 
-    /* FILTER BUTTON TEXT */
+/* TABLE */
 
-    const scoreInput = document.getElementById("min_score");
-    const expInput = document.getElementById("min_exp");
-    const downloadBtn = document.getElementById("downloadBtn");
+function renderTable(){
 
-    function updateButton() {
+const tbody = document.getElementById("tableBody");
+tbody.innerHTML = "";
 
-        if (scoreInput.value || expInput.value) {
+const start = (currentPage - 1) * rowsPerPage;
+const end = start + rowsPerPage;
 
-            downloadBtn.innerText = "⬇ Download Filtered Excel";
+filteredRows.slice(start,end)
+.forEach(row => tbody.appendChild(row));
 
-        } else {
+renderPagination();
 
-            downloadBtn.innerText = "⬇ Download Excel";
-
-        }
-
-    }
-
-    scoreInput.addEventListener("input", updateButton);
-    expInput.addEventListener("input", updateButton);
+}
 
 
+/* PAGINATION */
 
-    /* SORT FUNCTION */
+function renderPagination(){
 
-    const sortSelect = document.getElementById("sortSelect");
+const container = document.getElementById("pagination");
+container.innerHTML = "";
 
-    sortSelect.addEventListener("change", function () {
+const totalPages =
+Math.ceil(filteredRows.length / rowsPerPage) || 1;
 
-        const rows = Array.from(
-            document.querySelectorAll(".results-table tbody tr")
-        );
 
-        let sortedRows;
+/* PREVIOUS */
 
-        if (sortSelect.value === "experience") {
+const prev = document.createElement("button");
+prev.innerText = "Previous";
+prev.className = "btn secondary";
 
-            sortedRows = rows.sort((a, b) => {
+prev.onclick = () => {
+if(currentPage > 1){
+currentPage--;
+renderTable();
+}
+};
 
-                let expA = a.cells[4].textContent.match(/\d+/);
-                let expB = b.cells[4].textContent.match(/\d+/);
+container.appendChild(prev);
 
-                expA = expA ? parseInt(expA[0]) : 0;
-                expB = expB ? parseInt(expB[0]) : 0;
 
-                return expB - expA;
+/* PAGE NUMBERS */
 
-            });
+for(let i=1;i<=totalPages;i++){
 
-        } else {
+const btn = document.createElement("button");
 
-            sortedRows = rows.sort((a, b) => {
+btn.innerText = i;
+btn.className = "btn";
 
-                let scoreA = parseFloat(a.cells[2].textContent);
-                let scoreB = parseFloat(b.cells[2].textContent);
+if(i === currentPage){
+btn.style.background = "#6366f1";
+}
 
-                return scoreB - scoreA;
+btn.onclick = ()=>{
+currentPage = i;
+renderTable();
+};
 
-            });
+container.appendChild(btn);
 
-        }
+}
 
-        const tbody = document.querySelector(".results-table tbody");
 
-        tbody.innerHTML = "";
+/* NEXT */
 
-        sortedRows.forEach(row => tbody.appendChild(row));
+const next = document.createElement("button");
 
-    });
+next.innerText = "Next";
+next.className = "btn secondary";
+
+next.onclick = ()=>{
+if(currentPage < totalPages){
+currentPage++;
+renderTable();
+}
+};
+
+container.appendChild(next);
+
+}
+
+
+/* EVENTS */
+
+searchBox.addEventListener("input", applyFilters);
+minScoreInput.addEventListener("input", applyFilters);
+minExpInput.addEventListener("input", applyFilters);
+sortSelect.addEventListener("change", sortRows);
+
+
+/* INITIAL */
+
+renderTable();
+
+
+/* DOWNLOAD FILTERED */
+
+document.getElementById("downloadFilteredBtn")
+.addEventListener("click", function(){
+
+const minScore = document.getElementById("min_score").value;
+const minExp = document.getElementById("min_exp").value;
+
+let url = "/download_excel?";
+
+if(minScore){
+url += "min_score=" + minScore + "&";
+}
+
+if(minExp){
+url += "min_exp=" + minExp + "&";
+}
+
+window.location.href = url;
+
+});
 
 });
 
 </script>
 
-
 </body>
-
 </html>
