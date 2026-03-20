@@ -1,31 +1,53 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
     <title>AI Resume Screening</title>
+
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+
 </head>
+
 
 <body>
 
-<!-- Top Bar -->
+
+<!-- ================= TOP BAR ================= -->
+
 <div class="top-bar">
+
     <span class="user-info">
         👤 Logged in as {{ session.get('user') }}
     </span>
-    <a href="/logout" class="btn secondary">Logout</a>
+
+    <a href="/logout" class="btn secondary">
+        Logout
+    </a>
+
 </div>
 
-<!-- Main Card -->
+
+
+<!-- ================= MAIN CARD ================= -->
+
 <div class="card">
 
     <h1>🤖 AI Resume Screening System</h1>
-    <p class="subtitle">Skill Match Intelligence powered by NLP</p>
+
+    <p class="subtitle">
+        Skill Match Intelligence powered by NLP
+    </p>
+
 
     <form method="POST" enctype="multipart/form-data">
 
-        <!-- Job Description -->
+
+        <!-- JOB DESCRIPTION -->
+
         <div class="form-group">
+
             <label>Job Description</label>
 
             <textarea
@@ -33,9 +55,13 @@
                 rows="8"
                 placeholder="Paste the Job Description here..."
                 required></textarea>
+
         </div>
 
-        <!-- Resume Upload -->
+
+
+        <!-- RESUME UPLOAD -->
+
         <div class="form-group">
 
             <label>Upload Resumes (PDF / DOCX)</label>
@@ -46,14 +72,22 @@
                 name="resumes"
                 multiple
                 accept=".pdf,.docx"
-                required>
+                required
+            >
 
-            <!-- Show uploaded file names -->
-            <p id="fileNames" style="margin-top:10px; font-size:13px; color:#e5e7eb;"></p>
+            <!-- FILE NAMES DISPLAY -->
+
+            <p
+                id="fileNames"
+                style="margin-top:10px; font-size:13px; color:#e5e7eb;">
+            </p>
 
         </div>
 
-        <!-- Submit Button -->
+
+
+        <!-- SUBMIT BUTTON -->
+
         <button type="submit" class="btn-primary">
             🚀 Screen Resumes
         </button>
@@ -62,18 +96,57 @@
 
 </div>
 
-<!-- JS for showing uploaded file names -->
+
+
+<!-- ================= LOADER ================= -->
+
+<div id="loader">
+
+    <div class="spinner"></div>
+
+    <p>AI analyzing resumes...</p>
+
+</div>
+
+
+
+<!-- ================= JAVASCRIPT ================= -->
+
 <script>
 
-document.getElementById("resumeInput").addEventListener("change", function() {
+document.addEventListener("DOMContentLoaded", function () {
 
-    const files = Array.from(this.files).map(file => file.name).join(", ");
+    const resumeInput = document.getElementById("resumeInput");
+    const fileNames = document.getElementById("fileNames");
+    const form = document.querySelector("form");
+    const loader = document.getElementById("loader");
 
-    document.getElementById("fileNames").innerText = files;
+
+    /* SHOW SELECTED FILE NAMES */
+
+    resumeInput.addEventListener("change", function () {
+
+        const files = Array.from(this.files)
+            .map(file => file.name)
+            .join(", ");
+
+        fileNames.innerText = files;
+
+    });
+
+
+    /* SHOW LOADER WHEN FORM SUBMITS */
+
+    form.addEventListener("submit", function () {
+
+        loader.style.display = "flex";
+
+    });
 
 });
 
 </script>
+
 
 </body>
 </html>
