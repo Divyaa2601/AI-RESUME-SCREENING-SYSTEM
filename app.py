@@ -399,10 +399,11 @@ def download_top5():
     wb = Workbook()
     ws = wb.active
 
-    ws.append(["Resume", "Score", "Skills", "Experience"])
+    ws.append(["Rank", "Resume", "Score", "Skills", "Experience"])
 
-    for row in data:
+    for i,row in enumerate(data, start=1):
         ws.append([
+            i, 
             row["name"],
             row["score"],
             row["skills"],
