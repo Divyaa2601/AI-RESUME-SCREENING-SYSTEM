@@ -213,11 +213,11 @@ input:focus, textarea:focus {
 .signup {
     margin-top: 15px;
     font-size: 14px;
-    color: #d1d5db;   /* "New user?" text */
+    color: #d1d5db;   
 }
 
 .signup a {
-    color: #8b5cf6;   /* purple theme */
+    color: #8b5cf6;   
     font-weight: 500;
     text-decoration: none;
 }
