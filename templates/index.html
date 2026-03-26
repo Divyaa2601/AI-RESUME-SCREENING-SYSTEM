@@ -2,7 +2,6 @@
 <html lang="en">
 
 <head>
-
     <meta charset="UTF-8">
     <title>AI Resume Screening</title>
 
@@ -13,140 +12,170 @@
 
 <body>
 
+    <!-- ================= NAVBAR ================= -->
 
-<!-- ================= TOP BAR ================= -->
+    <div class="top-navbar">
 
-<div class="top-bar">
+        <div class="profile-dropdown">
 
-    <span class="user-info">
-        👤 Logged in as {{ session.get('user') }}
-    </span>
+            <!-- PROFILE ICON (IMAGE OR DEFAULT) -->
+            <div class="profile-icon" onclick="toggleMenu()">
 
-    <a href="/logout" class="btn secondary">
-        Logout
-    </a>
+                <img
+                    src="{{ url_for('static', filename='profile_pics/' + (session.get('profile_image') if session.get('profile_image') else 'default.png')) }}"
+                    alt="profile"
+                >
 
-</div>
+            </div>
 
+            <!-- DROPDOWN MENU -->
+            <div id="dropdownMenu" class="dropdown-content">
 
+                <a href="/profile">👤 Profile</a>
 
-<!-- ================= MAIN CARD ================= -->
+                <a href="/logout">🚪 Logout</a>
 
-<div class="card">
-
-    <h1>🤖 AI Resume Screening System</h1>
-
-    <p class="subtitle">
-        Skill Match Intelligence powered by NLP
-    </p>
-
-
-    <form method="POST" enctype="multipart/form-data">
-
-
-        <!-- JOB DESCRIPTION -->
-
-        <div class="form-group">
-
-            <label>Job Description</label>
-
-            <textarea
-                name="jd_text"
-                rows="8"
-                placeholder="Paste the Job Description here..."
-                required></textarea>
+            </div>
 
         </div>
 
+    </div>
 
 
-        <!-- RESUME UPLOAD -->
+    <!-- ================= MAIN CARD ================= -->
 
-        <div class="form-group">
+    <div class="card">
 
-            <label>Upload Resumes (PDF / DOCX)</label>
+        <h1>🤖 AI Resume Screening System</h1>
 
-            <input
-                id="resumeInput"
-                type="file"
-                name="resumes"
-                multiple
-                accept=".pdf,.docx"
-                required
-            >
-
-            <!-- FILE NAMES DISPLAY -->
-
-            <p
-                id="fileNames"
-                style="margin-top:10px; font-size:13px; color:#e5e7eb;">
-            </p>
-
-        </div>
+        <p class="subtitle">
+            Skill Match Intelligence powered by NLP
+        </p>
 
 
+        <form method="POST" enctype="multipart/form-data">
 
-        <!-- SUBMIT BUTTON -->
+            <!-- JOB DESCRIPTION -->
 
-        <button type="submit" class="btn-primary">
-            🚀 Screen Resumes
-        </button>
+            <div class="form-group">
 
-    </form>
+                <label>Job Description</label>
 
-</div>
+                <textarea
+                    name="jd_text"
+                    rows="8"
+                    placeholder="Paste the Job Description here..."
+                    required></textarea>
 
-
-
-<!-- ================= LOADER ================= -->
-
-<div id="loader">
-
-    <div class="spinner"></div>
-
-    <p>AI analyzing resumes...</p>
-
-</div>
+            </div>
 
 
+            <!-- RESUME UPLOAD -->
 
-<!-- ================= JAVASCRIPT ================= -->
+            <div class="form-group">
 
-<script>
+                <label>Upload Resumes (PDF / DOCX)</label>
 
-document.addEventListener("DOMContentLoaded", function () {
+                <input
+                    id="resumeInput"
+                    type="file"
+                    name="resumes"
+                    multiple
+                    accept=".pdf,.docx"
+                    required
+                >
 
-    const resumeInput = document.getElementById("resumeInput");
-    const fileNames = document.getElementById("fileNames");
-    const form = document.querySelector("form");
-    const loader = document.getElementById("loader");
+                <!-- FILE NAMES DISPLAY -->
 
+                <p
+                    id="fileNames"
+                    style="margin-top:10px; font-size:13px; color:#e5e7eb;">
+                </p>
 
-    /* SHOW SELECTED FILE NAMES */
-
-    resumeInput.addEventListener("change", function () {
-
-        const files = Array.from(this.files)
-            .map(file => file.name)
-            .join(", ");
-
-        fileNames.innerText = files;
-
-    });
+            </div>
 
 
-    /* SHOW LOADER WHEN FORM SUBMITS */
+            <!-- SUBMIT BUTTON -->
 
-    form.addEventListener("submit", function () {
+            <button type="submit" class="btn-primary">
+                🚀 Screen Resumes
+            </button>
 
-        loader.style.display = "flex";
+        </form>
 
-    });
+    </div>
 
-});
 
-</script>
+    <!-- ================= LOADER ================= -->
 
+    <div id="loader">
+
+        <div class="spinner"></div>
+
+        <p>AI analyzing resumes...</p>
+
+    </div>
+
+
+    <!-- ================= JAVASCRIPT ================= -->
+
+    <script>
+
+        /* PROFILE DROPDOWN */
+
+        function toggleMenu() {
+
+            const menu = document.getElementById("dropdownMenu");
+
+            menu.style.display =
+                menu.style.display === "block" ? "none" : "block";
+
+        }
+
+        window.onclick = function (event) {
+
+            if (!event.target.closest('.profile-dropdown')) {
+
+                document.getElementById("dropdownMenu").style.display = "none";
+
+            }
+
+        };
+
+
+        /* FILE PREVIEW + LOADER */
+
+        document.addEventListener("DOMContentLoaded", function () {
+
+            const resumeInput = document.getElementById("resumeInput");
+            const fileNames = document.getElementById("fileNames");
+            const form = document.querySelector("form");
+            const loader = document.getElementById("loader");
+
+            /* SHOW FILE NAMES */
+
+            resumeInput.addEventListener("change", function () {
+
+                const files = Array.from(this.files)
+                    .map(file => file.name)
+                    .join(", ");
+
+                fileNames.innerText = files;
+
+            });
+
+            /* SHOW LOADER */
+
+            form.addEventListener("submit", function () {
+
+                loader.style.display = "flex";
+                setTimeout(() => {}, 100);
+
+            });
+
+        });
+
+    </script>
 
 </body>
 </html>

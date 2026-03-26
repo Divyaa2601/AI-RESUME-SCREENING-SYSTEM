@@ -1,62 +1,56 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
     <meta charset="UTF-8">
     <title>Login | AI Resume Screening</title>
+
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+
 </head>
+
 <body>
 
-<div class="login-wrapper">
-    <div class="login-card">
+    <div class="login-wrapper">
 
-        <h2>Login</h2>
-        <p class="subtitle">AI-Based Resume Screening System</p>
+        <div class="login-card">
 
-        {% if error %}
-            <p class="error">{{ error }}</p>
-        {% endif %}
+            <h2>Login</h2>
+            <p class="subtitle">AI-Based Resume Screening System</p>
 
-        <!-- Normal Login -->
-        <form method="POST">
-            <input 
-                type="text" 
-                name="username" 
-                placeholder="Username"
-                required>
+            {% if error %}
+                <p class="error">{{ error }}</p>
+            {% endif %}
 
-            <input 
-                type="password" 
-                name="password" 
-                placeholder="Password"
-                required>
+            <!-- LOGIN FORM -->
+            <form method="POST">
 
-            <button type="submit" class="btn-primary">
-                Login
-            </button>
-        </form>
+                <input type="text" name="username" placeholder="Username" required>
 
-        <hr style="margin:25px 0; opacity:0.3; border:none; height:1px; background:white;">
+                <input type="password" name="password" placeholder="Password" required>
 
-       <!-- Google Login -->
-       <a href="/login/google" class="google-btn">
-            <img 
-                src="https://developers.google.com/identity/images/g-logo.png"
-                alt="Google logo"
-                class="google-icon">
-            <span>Sign in with Google</span>
-        </a>
+                <button type="submit" class="btn-primary">
+                    Login
+                </button>
 
-        <!-- Signup Link -->
-        <p style="margin-top:18px; font-size:14px;">
-            New user?
-            <a href="/signup" style="color:#c7d2fe; font-weight:600;">
-                Create an account
+            </form>
+
+            <div class="divider"></div>
+
+            <!-- GOOGLE LOGIN -->
+            <a href="/login/google" class="google-btn">
+                <img src="https://developers.google.com/identity/images/g-logo.png" class="google-icon">
+                Sign in with Google
             </a>
-        </p>
+
+            <!-- SIGNUP -->
+            <p class="signup">
+                New user? <a href="/signup">Create an account</a>
+            </p>
+
+        </div>
 
     </div>
-</div>
 
 </body>
 </html>

@@ -1,19 +1,12 @@
 from flask import (
-    Flask,
-    render_template,
-    request,
-    redirect,
-    url_for,
-    session,
-    Response,
-    send_from_directory
+    Flask, render_template, request, redirect,
+    url_for, session, Response, send_from_directory
 )
 
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from datetime import datetime
 from openpyxl import Workbook
-from openpyxl.styles import Font, PatternFill
 
 import io
 import os
@@ -38,7 +31,10 @@ db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
 
 UPLOAD_FOLDER = "uploads"
+PROFILE_FOLDER = "static/profile_pics"
+
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(PROFILE_FOLDER, exist_ok=True)
 
 
 # =====================================================
@@ -46,9 +42,12 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 # =====================================================
 
 class User(db.Model):
+    __tablename__ = "user"
+
     user_id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(100), unique=True)
-    password_hash = db.Column(db.String(255))
+    username = db.Column(db.String(100), unique=True, nullable=False)
+    password_hash = db.Column(db.String(255), nullable=False)
+    profile_image = db.Column(db.String(200), default="default.png")  # ✅ FIX
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 
@@ -77,22 +76,28 @@ class MatchResult(db.Model):
 
 
 # =====================================================
-# FILE VALIDATION
+# HELPERS
 # =====================================================
 
 ALLOWED_EXTENSIONS = {"pdf", "docx"}
+
 
 def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
+def get_current_user():
+    if "user_id" in session:
+        return User.query.get(session["user_id"])
+    return None
+
+
 # =====================================================
-# USER AUTHENTICATION
+# AUTHENTICATION
 # =====================================================
 
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
-
     if request.method == "POST":
 
         username = request.form["username"]
@@ -100,22 +105,18 @@ def signup():
 
         hashed_pw = bcrypt.generate_password_hash(password).decode("utf-8")
 
-        user = User(
-            username=username,
-            password_hash=hashed_pw
-        )
+        user = User(username=username, password_hash=hashed_pw)
 
         db.session.add(user)
         db.session.commit()
 
-        return redirect(url_for("login"))
+        return redirect("/login")
 
     return render_template("signup.html")
 
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
-
     if request.method == "POST":
 
         username = request.form["username"]
@@ -124,8 +125,9 @@ def login():
         user = User.query.filter_by(username=username).first()
 
         if user and bcrypt.check_password_hash(user.password_hash, password):
-            session["user"] = user.username
-            return redirect(url_for("index"))
+            session["user_id"] = user.user_id
+            session["username"] = user.username
+            return redirect("/")
 
         return "Invalid credentials"
 
@@ -134,24 +136,25 @@ def login():
 
 @app.route("/logout")
 def logout():
-
     session.clear()
-    return redirect(url_for("login"))
+    return redirect("/login")
 
 
 # =====================================================
-# MAIN APPLICATION PAGE
+# MAIN PAGE
 # =====================================================
 
 @app.route("/", methods=["GET", "POST"])
 def index():
 
-    if "user" not in session:
-        return redirect(url_for("login"))
+    if "user_id" not in session:
+        return redirect("/login")
+
+    user = get_current_user()
 
     if request.method == "POST":
 
-        # Clear old results
+        # Clear previous session data
         MatchResult.query.delete()
         Resume.query.delete()
         JobDescription.query.delete()
@@ -160,13 +163,15 @@ def index():
         jd_text = request.form["jd_text"]
         files = request.files.getlist("resumes")
 
-        # Save Job Description
-        jd = JobDescription(description=jd_text)
+        jd = JobDescription(
+            description=jd_text,
+            user_id=session["user_id"]
+        )
+
         db.session.add(jd)
         db.session.commit()
 
         jd_skills = extract_skills(jd_text)
-
         results = []
 
         for file in files:
@@ -177,7 +182,6 @@ def index():
                 file.save(filepath)
 
                 text = extract_text(file)
-
                 resume_skills = extract_skills(text)
 
                 matched = resume_skills & jd_skills
@@ -188,7 +192,6 @@ def index():
                     if jd_skills else 0
                 )
 
-                # Save Resume
                 resume = Resume(
                     jd_id=jd.jd_id,
                     file_name=file.filename,
@@ -218,93 +221,207 @@ def index():
                     "missing": format_skills(missing),
                     "exp": exp
                 })
+        min_score = float(request.args.get("min_score", 0) or 0)
+        min_exp = float(request.args.get("min_exp", 0) or 0)
+        sort_by = request.args.get("sort", "score")
 
-        # Sort candidates by score
-        results.sort(key=lambda x: x["score"], reverse=True)
+        filtered_results = []
+
+        for r in results:
+
+            exp_val = 0
+            if "year" in str(r["exp"]).lower():
+                try:
+                    exp_val = float(r["exp"].split()[0])
+                except:
+                    exp_val = 0
+
+            if r["score"] >= min_score and exp_val >= min_exp:
+                filtered_results.append(r)
+
+        # SORTING
+        if sort_by == "score":
+            filtered_results.sort(key=lambda x: x["score"], reverse=True)
 
         return render_template(
             "results.html",
-            results=results,
-            jd_skills=format_skills(jd_skills)
+            results=filtered_results,
+            jd_skills=format_skills(jd_skills),
+            user=user  # ✅ important for navbar image
         )
 
-    return render_template("index.html")
+    return render_template("index.html", user=user)
+
+
+# =====================================================
+# PROFILE PAGE
+# =====================================================
+
+@app.route("/profile")
+def profile():
+
+    if "user_id" not in session:
+        return redirect("/login")
+
+    user = get_current_user()
+
+    total_resumes = Resume.query.count()
+    scores = [r.score for r in MatchResult.query.all()]
+
+    avg_score = round(sum(scores)/len(scores), 2) if scores else 0
+    best_score = max(scores) if scores else 0
+
+    return render_template(
+        "profile.html",
+        user=user,
+        total_resumes=total_resumes,
+        avg_score=avg_score,
+        best_score=best_score
+    )
+
+
+# =====================================================
+# EDIT PROFILE
+# =====================================================
+
+@app.route("/edit_profile", methods=["GET", "POST"])
+def edit_profile():
+
+    if "user_id" not in session:
+        return redirect("/login")
+
+    user = get_current_user()
+
+    if request.method == "POST":
+
+        new_username = request.form.get("username")
+        new_password = request.form.get("password")
+        file = request.files.get("profile_image")
+
+        if new_username:
+            user.username = new_username
+            session["username"] = new_username
+
+        if new_password:
+            user.password_hash = bcrypt.generate_password_hash(new_password).decode("utf-8")
+
+        if file and file.filename:
+            filename = f"user_{user.user_id}.png"
+            filepath = os.path.join(PROFILE_FOLDER, filename)
+            file.save(filepath)
+
+            user.profile_image = filename
+
+        db.session.commit()
+
+        return redirect("/profile")
+
+    return render_template("edit_profile.html", user=user)
 
 
 # =====================================================
 # EXCEL EXPORT
 # =====================================================
 
-@app.route("/download_excel")
+@app.route("/download_excel", methods=["GET", "POST"])
 def download_excel():
-
-    min_score = request.args.get("min_score", type=float)
-    min_exp = request.args.get("min_exp", type=int)
 
     wb = Workbook()
     ws = wb.active
-    ws.title = "Resume Screening Results"
+    ws.title = "Results"
 
-    headers = [
-        "Rank",
-        "Resume",
-        "AI Confidence Score (%)",
-        "Matched Skills",
-        "Missing Skills",
-        "Experience"
-    ]
+    ws.append([
+        "Rank", "Resume", "Score",
+        "Matched Skills", "Missing Skills", "Experience"
+    ])
 
-    ws.append(headers)
+    # 🔥 CASE 1: FILTERED DATA (POST)
+    if request.method == "POST":
 
-    results = (
-        db.session.query(MatchResult, Resume)
-        .join(Resume, MatchResult.resume_id == Resume.resume_id)
-        .order_by(MatchResult.score.desc())
-        .all()
+        data = request.get_json()
+
+        if not data:
+            return "No data", 400
+
+        rank = 1
+        for row in data:
+            ws.append([
+                rank,
+                row.get("name", ""),
+                row.get("score", ""),
+                row.get("skills", ""),
+                "",   # missing not needed here
+                row.get("exp", "")
+            ])
+            rank += 1
+
+    # 🔥 CASE 2: ALL DATA (GET)
+    else:
+
+        results = (
+            db.session.query(MatchResult, Resume)
+            .join(Resume, MatchResult.resume_id == Resume.resume_id)
+            .order_by(MatchResult.score.desc())
+            .all()
+        )
+
+        rank = 1
+        for r, resume in results:
+            ws.append([
+                rank,
+                resume.file_name,
+                f"{r.score}%",
+                r.matched_skills,
+                r.missing_skills,
+                r.experience
+            ])
+            rank += 1
+
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+
+    filename = "filtered.xlsx" if request.method == "POST" else "all_results.xlsx"
+
+    return Response(
+        output.getvalue(),
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={
+            "Content-Disposition": f"attachment; filename={filename}"
+        }
     )
 
-    rank = 1
+@app.route("/download_top5", methods=["POST"])
+def download_top5():
 
-    for r, resume in results:
+    data = request.get_json()
 
-        score = r.score
+    wb = Workbook()
+    ws = wb.active
 
-        exp_years = 0
-        if r.experience != "Not Mentioned":
-            exp_years = int(r.experience.split()[0])
+    ws.append(["Resume", "Score", "Skills", "Experience"])
 
-        # APPLY FILTERS
-        if min_score and score < min_score:
-            continue
-
-        if min_exp and exp_years < min_exp:
-            continue
-
+    for row in data:
         ws.append([
-            rank,
-            resume.file_name,
-            f"{score}%",
-            r.matched_skills,
-            r.missing_skills,
-            r.experience
+            row["name"],
+            row["score"],
+            row["skills"],
+            row["exp"]
         ])
-
-        rank += 1
 
     output = io.BytesIO()
     wb.save(output)
     output.seek(0)
 
     return Response(
-        output,
-        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={
-            "Content-Disposition":
-            "attachment;filename=filtered_results.xlsx"
-        }
-    )
+    output.getvalue(),  
+    mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    headers={
+        "Content-Disposition": "attachment; filename=filtered.xlsx"
+    }
+)
 # =====================================================
-# RESUME PREVIEW & DOWNLOAD
+# FILE ROUTES
 # =====================================================
 
 @app.route("/resume/<filename>")
@@ -314,15 +431,11 @@ def preview_resume(filename):
 
 @app.route("/download/<filename>")
 def download_resume(filename):
-    return send_from_directory(
-        UPLOAD_FOLDER,
-        filename,
-        as_attachment=True
-    )
+    return send_from_directory(UPLOAD_FOLDER, filename, as_attachment=True)
 
 
 # =====================================================
-# RUN APPLICATION
+# RUN
 # =====================================================
 
 if __name__ == "__main__":
