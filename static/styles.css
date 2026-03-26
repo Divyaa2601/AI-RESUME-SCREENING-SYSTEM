@@ -100,7 +100,6 @@ textarea {
     font-size: 14px;
      text-align: left !important;
     line-height: 1.5;
-    vertical-align: top;
     display: block; 
 }
 
@@ -213,11 +212,11 @@ input:focus, textarea:focus {
 .signup {
     margin-top: 15px;
     font-size: 14px;
-    color: #d1d5db;   
+    color: #d1d5db;   /* "New user?" text */
 }
 
 .signup a {
-    color: #8b5cf6;   
+    color: #8b5cf6;   /* purple theme */
     font-weight: 500;
     text-decoration: none;
 }
@@ -229,7 +228,7 @@ input:focus, textarea:focus {
 
 .signup a {
     background: linear-gradient(90deg, #7c3aed, #6366f1);
-    -webkit-background-clip: text;
+    clip: text;
     -webkit-text-fill-color: transparent;
     font-weight: 600;
 }
