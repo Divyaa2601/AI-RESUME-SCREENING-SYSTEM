@@ -15,11 +15,30 @@ from parser import extract_text
 from extractor import extract_skills, extract_experience, format_skills
 from PIL import Image
 
+from dotenv import load_dotenv
+load_dotenv()
+import certifi
+os.environ['SSL_CERT_FILE'] = certifi.where()
+from authlib.integrations.flask_client import OAuth
+
 # =====================================================
 # APP CONFIGURATION
 # =====================================================
 
 app = Flask(__name__)
+os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'  # only for local
+
+oauth = OAuth(app)
+
+google = oauth.register(
+    name='google',
+    client_id=os.getenv("GOOGLE_CLIENT_ID"),
+    client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
+    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+    client_kwargs={
+        'scope': 'openid email profile'
+    }
+)
 app.secret_key = "resume_screening_secret_key"
 
 app.config["SQLALCHEMY_DATABASE_URI"] = \
@@ -137,6 +156,37 @@ def login():
 
     return render_template("login.html")
 
+@app.route("/login/google")
+def google_login():
+    return google.authorize_redirect(
+            redirect_uri=url_for('google_callback', _external=True)
+        )
+
+@app.route("/login/google/callback")
+def google_callback():
+
+    token = google.authorize_access_token()
+
+    user_info = google.get(
+        'https://openidconnect.googleapis.com/v1/userinfo'
+    ).json()
+
+    email = user_info['email']
+
+    user = User.query.filter_by(username=email).first()
+
+    if not user:
+        user = User(
+            username=email,
+            password_hash=bcrypt.generate_password_hash("google_login").decode("utf-8")
+        )
+        db.session.add(user)
+        db.session.commit()
+
+    session["user_id"] = user.user_id
+    session["username"] = user.username
+
+    return redirect("/")
 
 @app.route("/logout")
 def logout():
