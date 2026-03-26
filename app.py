@@ -17,6 +17,8 @@ from PIL import Image
 
 from dotenv import load_dotenv
 load_dotenv()
+if not os.getenv("GOOGLE_CLIENT_ID"):
+    print("❌ GOOGLE_CLIENT_ID not loaded")
 import certifi
 os.environ['SSL_CERT_FILE'] = certifi.where()
 from authlib.integrations.flask_client import OAuth
@@ -173,8 +175,8 @@ def google_callback():
 
     email = user_info['email']
 
+    username = email.split("@")[0]
     user = User.query.filter_by(username=email).first()
-
     if not user:
         user = User(
             username=email,
