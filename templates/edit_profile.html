@@ -8,19 +8,16 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 
     <style>
-
         body {
             background: linear-gradient(135deg, #5b21b6, #1e3a8a);
             font-family: 'Segoe UI', sans-serif;
         }
 
-        /* CONTAINER */
         .edit-container {
             max-width: 600px;
             margin: 80px auto;
         }
 
-        /* CARD */
         .edit-card {
             background: #1f2937;
             padding: 30px;
@@ -29,7 +26,6 @@
             color: white;
         }
 
-        /* AVATAR */
         .avatar-preview {
             width: 100px;
             height: 100px;
@@ -48,7 +44,6 @@
             object-fit: cover;
         }
 
-        /* INPUTS */
         .form-group {
             margin: 15px 0;
             text-align: left;
@@ -68,12 +63,10 @@
             outline: none;
         }
 
-        /* FILE INPUT */
         .file-input {
             margin-top: 10px;
         }
 
-        /* BUTTONS */
         .btn {
             display: inline-block;
             padding: 10px 20px;
@@ -97,7 +90,6 @@
         .actions {
             margin-top: 20px;
         }
-
     </style>
 
 </head>
@@ -112,14 +104,15 @@
 
         <form method="POST" enctype="multipart/form-data">
 
+            <!-- 🔥 HIDDEN INPUT (IMPORTANT) -->
+            <input type="hidden" name="remove_image" id="removeImageInput" value="no">
+
             <!-- PROFILE IMAGE PREVIEW -->
             <div class="avatar-preview" id="avatarPreview">
-
                 <img
                     src="{{ url_for('static', filename='profile_pics/' + (user.profile_image if user.profile_image else 'default.png')) }}"
                     alt="profile"
                 >
-
             </div>
 
             <!-- FILE INPUT -->
@@ -132,6 +125,13 @@
                     accept="image/*"
                     onchange="previewImage(event)"
                 >
+            </div>
+
+            <!-- REMOVE IMAGE BUTTON -->
+            <div class="form-group">
+                <button type="button" class="btn btn-secondary" onclick="removeProfileImage()">
+                    ❌ Remove Profile Image
+                </button>
             </div>
 
             <!-- USERNAME -->
@@ -174,17 +174,13 @@
 <script>
 
 function previewImage(event) {
-
     const file = event.target.files[0];
-
     if (!file) return;
 
     const reader = new FileReader();
 
     reader.onload = function () {
-
         const preview = document.getElementById("avatarPreview");
-
         preview.innerHTML = "";
 
         const img = document.createElement("img");
@@ -192,10 +188,22 @@ function previewImage(event) {
 
         preview.appendChild(img);
 
+        // If uploading new image, cancel remove
+        document.getElementById("removeImageInput").value = "no";
     };
 
     reader.readAsDataURL(file);
+}
 
+
+function removeProfileImage() {
+
+    // Tell backend to remove
+    document.getElementById("removeImageInput").value = "yes";
+
+    // Show default image instantly
+    const preview = document.getElementById("avatarPreview");
+    preview.innerHTML = '<img src="/static/profile_pics/default.png">';
 }
 
 </script>

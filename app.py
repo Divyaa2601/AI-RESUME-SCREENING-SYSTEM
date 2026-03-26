@@ -13,7 +13,7 @@ import os
 
 from parser import extract_text
 from extractor import extract_skills, extract_experience, format_skills
-
+from PIL import Image
 
 # =====================================================
 # APP CONFIGURATION
@@ -36,6 +36,10 @@ PROFILE_FOLDER = "static/profile_pics"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(PROFILE_FOLDER, exist_ok=True)
 
+ALLOWED_IMAGE_EXTENSIONS = {"png", "jpg", "jpeg"}
+
+def allowed_image(filename):
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_IMAGE_EXTENSIONS
 
 # =====================================================
 # DATABASE MODELS
@@ -297,6 +301,7 @@ def edit_profile():
         new_username = request.form.get("username")
         new_password = request.form.get("password")
         file = request.files.get("profile_image")
+        remove_image = request.form.get("remove_image")
 
         if new_username:
             user.username = new_username
@@ -305,13 +310,27 @@ def edit_profile():
         if new_password:
             user.password_hash = bcrypt.generate_password_hash(new_password).decode("utf-8")
 
-        if file and file.filename:
+        # 🔥 REMOVE FIRST (priority)
+        if remove_image == "yes":
+
+            if user.profile_image != "default.png":
+                old_path = os.path.join(PROFILE_FOLDER, user.profile_image)
+                if os.path.exists(old_path):
+                    os.remove(old_path)
+
+            user.profile_image = "default.png"
+
+        # 🔥 ELSE upload image
+        elif file and file.filename and allowed_image(file.filename):
+
             filename = f"user_{user.user_id}.png"
             filepath = os.path.join(PROFILE_FOLDER, filename)
-            file.save(filepath)
+
+            img = Image.open(file)
+            img = img.resize((200, 200))
+            img.save(filepath)
 
             user.profile_image = filename
-
         db.session.commit()
 
         return redirect("/profile")
@@ -434,6 +453,26 @@ def preview_resume(filename):
 def download_resume(filename):
     return send_from_directory(UPLOAD_FOLDER, filename, as_attachment=True)
 
+# =====================================================
+# DELETE ACCOUNT
+# =====================================================
+
+@app.route("/delete_account", methods=["POST"])
+def delete_account():
+
+    if "user_id" not in session:
+        return redirect("/login")
+
+    user = get_current_user()
+
+    # Delete user from database
+    db.session.delete(user)
+    db.session.commit()
+
+    # Clear session
+    session.clear()
+
+    return redirect("/signup")
 
 # =====================================================
 # RUN
