@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Profile</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+
+    <style>
+
+        body {
+            background: linear-gradient(135deg, #5b21b6, #1e3a8a);
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        /* CONTAINER */
+        .edit-container {
+            max-width: 600px;
+            margin: 80px auto;
+        }
+
+        /* CARD */
+        .edit-card {
+            background: #1f2937;
+            padding: 30px;
+            border-radius: 16px;
+            text-align: center;
+            color: white;
+        }
+
+        /* AVATAR */
+        .avatar-preview {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            background: #374151;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .avatar-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* INPUTS */
+        .form-group {
+            margin: 15px 0;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: none;
+            outline: none;
+        }
+
+        /* FILE INPUT */
+        .file-input {
+            margin-top: 10px;
+        }
+
+        /* BUTTONS */
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 10px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #7c3aed, #6366f1);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #374151;
+            color: white;
+        }
+
+        .actions {
+            margin-top: 20px;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="edit-container">
+
+    <div class="edit-card">
+
+        <h2>Edit Profile</h2>
+
+        <form method="POST" enctype="multipart/form-data">
+
+            <!-- PROFILE IMAGE PREVIEW -->
+            <div class="avatar-preview" id="avatarPreview">
+
+                <img
+                    src="{{ url_for('static', filename='profile_pics/' + (user.profile_image if user.profile_image else 'default.png')) }}"
+                    alt="profile"
+                >
+
+            </div>
+
+            <!-- FILE INPUT -->
+            <div class="form-group">
+                <label>Profile Image</label>
+                <input
+                    type="file"
+                    name="profile_image"
+                    class="file-input"
+                    accept="image/*"
+                    onchange="previewImage(event)"
+                >
+            </div>
+
+            <!-- USERNAME -->
+            <div class="form-group">
+                <label>Username</label>
+                <input
+                    type="text"
+                    name="username"
+                    placeholder="Enter new username"
+                >
+            </div>
+
+            <!-- PASSWORD -->
+            <div class="form-group">
+                <label>Password</label>
+                <input
+                    type="password"
+                    name="password"
+                    placeholder="Enter new password"
+                >
+            </div>
+
+            <!-- SAVE BUTTON -->
+            <button type="submit" class="btn btn-primary">
+                💾 Save Changes
+            </button>
+
+        </form>
+
+        <!-- ACTIONS -->
+        <div class="actions">
+            <a href="/profile" class="btn btn-secondary">← Back</a>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- IMAGE PREVIEW SCRIPT -->
+<script>
+
+function previewImage(event) {
+
+    const file = event.target.files[0];
+
+    if (!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = function () {
+
+        const preview = document.getElementById("avatarPreview");
+
+        preview.innerHTML = "";
+
+        const img = document.createElement("img");
+        img.src = reader.result;
+
+        preview.appendChild(img);
+
+    };
+
+    reader.readAsDataURL(file);
+
+}
+
+</script>
+
+</body>
+</html>
