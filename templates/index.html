@@ -22,7 +22,7 @@
             <div class="profile-icon" onclick="toggleMenu()">
 
                 <img
-                    src="{{ url_for('static', filename='profile_pics/' + (session.get('profile_image') if session.get('profile_image') else 'default.png')) }}"
+                    src="{{ url_for('static', filename='profile_pics/' + (user.profile_image if user.profile_image else 'default.png')) }}"
                     alt="profile"
                 >
 

@@ -186,11 +186,21 @@
 
             <a href="/logout" class="btn primary">🚪 Logout</a>
 
+            <form action="/delete_account" method="POST" onsubmit="return confirmDelete()">
+                <button type="submit" class="btn danger">
+                    🗑 Delete Account
+                </button>
+            </form>
+
         </div>
 
     </div>
 
 </div>
-
+<script>
+function confirmDelete() {
+    return confirm("Are you sure you want to delete your account? This cannot be undone!");
+}
+</script>
 </body>
 </html>

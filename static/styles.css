@@ -216,9 +216,12 @@ input:focus, textarea:focus {
 }
 
 .signup a {
-    color: #8b5cf6;   /* purple theme */
-    font-weight: 500;
+    background: linear-gradient(90deg, #7c3aed, #6366f1);
+    clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 600;
     text-decoration: none;
+    display: inline;
 }
 
 .signup a:hover {
@@ -226,12 +229,6 @@ input:focus, textarea:focus {
     text-decoration: underline;
 }
 
-.signup a {
-    background: linear-gradient(90deg, #7c3aed, #6366f1);
-    clip: text;
-    -webkit-text-fill-color: transparent;
-    font-weight: 600;
-}
 /* ================= SEARCH ================= */
 
 .search-box {
@@ -467,10 +464,12 @@ input:focus, textarea:focus {
 }
 
 .profile-icon {
-    width: 40px;
-    height: 40px;
+    width: 45px;
+    height: 45px;
     border-radius: 50%;
     background: linear-gradient(135deg, #7c3aed, #6366f1);
+    border: 2px solid #fff;
+    box-shadow: 0 0 10px rgba(124,58,237,0.8);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -581,4 +580,12 @@ input:focus, textarea:focus {
 .center-btn {
     text-align: center;
     margin-top: 25px;
+}
+
+.btn.danger {
+    background: #dc2626;
+}
+
+.btn.danger:hover {
+    background: #b91c1c;
 }
