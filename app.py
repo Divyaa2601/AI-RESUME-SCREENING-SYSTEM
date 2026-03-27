@@ -22,14 +22,15 @@ if not os.getenv("GOOGLE_CLIENT_ID"):
 import certifi
 os.environ['SSL_CERT_FILE'] = certifi.where()
 from authlib.integrations.flask_client import OAuth
-from werkzeug.middleware.proxy_fix import ProxyFix
 
-app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 # =====================================================
 # APP CONFIGURATION
 # =====================================================
 
 app = Flask(__name__)
+from werkzeug.middleware.proxy_fix import ProxyFix
+
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'  # only for local
 
 oauth = OAuth(app)
