@@ -303,6 +303,11 @@ def index():
         if sort_by == "score":
             filtered_results.sort(key=lambda x: x["score"], reverse=True)
 
+        elif sort_by == "exp":
+            filtered_results.sort(
+            key=lambda x: float(x["exp"].split()[0]) if "year" in x["exp"].lower() else 0,
+            reverse=True
+        )
         return render_template(
             "results.html",
             results=filtered_results,
