@@ -31,7 +31,6 @@ app = Flask(__name__)
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
-os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'  # only for local
 
 oauth = OAuth(app)
 
