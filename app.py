@@ -22,7 +22,9 @@ if not os.getenv("GOOGLE_CLIENT_ID"):
 import certifi
 os.environ['SSL_CERT_FILE'] = certifi.where()
 from authlib.integrations.flask_client import OAuth
+from werkzeug.middleware.proxy_fix import ProxyFix
 
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 # =====================================================
 # APP CONFIGURATION
 # =====================================================
@@ -163,7 +165,7 @@ def login():
 @app.route("/login/google")
 def google_login():
     return google.authorize_redirect(
-            redirect_uri=url_for('google_callback', _external=True)
+            redirect_uri="https://ai-resume-screening-system-n5p3.onrender.com/login/google/callback"
         )
 
 @app.route("/login/google/callback")
