@@ -182,7 +182,7 @@ document.addEventListener("DOMContentLoaded", function(){
     allRows = Array.from(document.querySelectorAll("#tableBody tr"));
     filteredRows = [...allRows];
     renderTable();
-    document.getElementById("downloadBtn").innerText = "⬇ Download Excel";
+    document.getElementById("downloadBtFan").innerText = "⬇ Download Excel";
 });
 
 /* ================= FILTER ================= */
@@ -192,7 +192,9 @@ function applyFilters() {
     const search = document.getElementById("searchBox").value.toLowerCase();
     const minScore = parseFloat(document.getElementById("min_score").value) || 0;
     const minExp = parseFloat(document.getElementById("min_exp").value) || 0;
+    const sortBy = document.getElementById("sortSelect").value;
 
+    // 🔹 STEP 1: FILTER
     filteredRows = allRows.filter(row => {
 
         const name = row.children[1].innerText.toLowerCase();
@@ -216,8 +218,28 @@ function applyFilters() {
         );
     });
 
+    // 🔹 STEP 2: SORT (OUTSIDE FILTER)
+    if (sortBy === "score") {
+        filteredRows.sort((a, b) =>
+            parseFloat(b.children[2].innerText) - parseFloat(a.children[2].innerText)
+        );
+    }
+    else if (sortBy === "exp") {
+        filteredRows.sort((a, b) => {
+            const getExp = (row) => {
+                const text = row.children[4].innerText.toLowerCase();
+                if (text.includes("year")) {
+                    return parseFloat(text);
+                }
+                return 0;
+            };
+            return getExp(b) - getExp(a);
+        });
+    }
+
     currentPage = 1;
     renderTable();
+
     const btn = document.getElementById("downloadBtn");
     if (search === "" && minScore === 0 && minExp === 0) {
         btn.innerText = "⬇ Download Excel";
@@ -225,7 +247,6 @@ function applyFilters() {
         btn.innerText = "⬇ Download Filtered Excel";
     }
 }
-
 /* ================= RENDER ================= */
 
 function renderTable(){
