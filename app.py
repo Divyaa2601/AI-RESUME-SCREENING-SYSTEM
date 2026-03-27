@@ -43,8 +43,10 @@ google = oauth.register(
 )
 app.secret_key = "resume_screening_secret_key"
 
-app.config["SQLALCHEMY_DATABASE_URI"] = \
-    "postgresql://postgres:divya2601@localhost:5432/resume_screening"
+app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv(
+    "DATABASE_URL",
+    "sqlite:///database.db"
+)
 
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
@@ -535,6 +537,7 @@ if __name__ == "__main__":
     with app.app_context():
         db.create_all()
 
+    import os
     port = int(os.environ.get("PORT", 5000))
 
     app.run(host="0.0.0.0", port=port)
